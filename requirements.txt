@@ -1,0 +1,9 @@
+crewai
+crewai-tools
+langchain
+langchain-groq
+langchain-community
+faiss-cpu
+sentence-transformers
+google-search-results
+rich
