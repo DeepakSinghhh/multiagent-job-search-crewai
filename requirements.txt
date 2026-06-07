@@ -6,3 +6,4 @@ langchain-community
 pydantic
 numpy
 google-search-results
+sentence-transformers

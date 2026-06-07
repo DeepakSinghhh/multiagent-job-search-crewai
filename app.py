@@ -90,25 +90,43 @@ class CompanyResearchTool(BaseTool):
         except Exception:
             return DuckDuckGoSearchRun().run(f'{company} company overview culture values')
 
+# UPGRADED: Semantic Skill Gap Analyzer using SentenceTransformers
 class SkillGapAnalyzerTool(BaseTool):
     name: str = 'skill_gap_analyzer'
-    description: str = 'Analyze gaps between candidate skills and job requirements. Input JSON: {"candidate_skills": [...], "job_requirements": [...]}'
+    description: str = 'Analyze gaps between candidate skills and job requirements using semantic similarity. Input JSON: {"candidate_skills": [...], "job_requirements": [...]}'
     def _run(self, input_str: str) -> str:
         try:
             data = json.loads(input_str)
-            cands = [c.lower().strip() for c in data.get('candidate_skills', [])]
-            reqs  = [r.lower().strip() for r in data.get('job_requirements', [])]
+            cands = data.get('candidate_skills', [])
+            reqs  = data.get('job_requirements', [])
+            
+            if not cands or not reqs:
+                return 'Provide both candidate_skills and job_requirements lists.'
+                
+            # Direct semantic similarity matching mirroring your notebook update
+            from sentence_transformers import SentenceTransformer, util
+            model = SentenceTransformer('all-MiniLM-L6-v2')
+            
+            ce = model.encode(cands, convert_to_tensor=True)
+            re = model.encode(reqs, convert_to_tensor=True)
             
             matched, missing = [], []
-            for req in reqs:
-                if any(cand in req or req in cand for cand in cands):
-                    matched.append({"requirement": req, "status": "Matched"})
+            threshold = 0.55
+            
+            for i, req in enumerate(reqs):
+                scores = util.cos_sim(re[i], ce)[0]
+                best = float(scores.max())
+                best_match = cands[int(scores.argmax())]
+                
+                if best >= threshold:
+                    matched.append({'requirement': req, 'matched_skill': best_match, 'score': round(best, 3)})
                 else:
-                    missing.append({"requirement": req, "status": "Missing/Gap"})
+                    missing.append({'requirement': req, 'closest_alternative': best_match, 'gap_distance': round(1 - best, 3)})
             
             pct = round(len(matched) / len(reqs) * 100, 1) if reqs else 0
             rec = 'Strong match! Apply immediately.' if pct >= 70 else 'Good match with minor gaps.' if pct >= 50 else 'Upskilling recommended.'
-            return json.dumps({'overall_match_pct': pct, 'matched': matched, 'gaps': missing, 'recommendation': rec}, indent=2)
+            
+            return json.dumps({'overall_match_pct': pct, 'matched_skills': matched, 'gaps': missing, 'recommendation': rec}, indent=2)
         except Exception as e:
             return f'Skill gap analyzer error: {e}'
 
@@ -131,7 +149,7 @@ interview_tool = InterviewQuestionsTool()
 
 # ─── MAIN WEB UI LAYOUT ────────────────────────────────────────────────
 st.title("🤖 Multi-Agent Job Search System")
-st.markdown("Coordinated team of AI agents running via **CrewAI** & **Llama 3.3 (Groq)** to find targets and map application assets.")
+st.markdown("Coordinated team of AI agents running via **CrewAI** & **Llama 3.3 (Groq)** to map application assets with real-time semantic analysis.")
 
 # Profile Configuration Form Layout
 with st.expander("👤 Edit Candidate Persona Profile", expanded=True):
@@ -144,20 +162,20 @@ with st.expander("👤 Edit Candidate Persona Profile", expanded=True):
         experience_years = st.number_input("Years of Experience", min_value=0, max_value=40, value=5)
     with col2:
         current_role = st.text_input("Current Position", value="ML Engineer at a Series B startup")
-        salary_expectation = st.text_input("Target Compensation", value="230,000 base + equity")
-        career_goal = st.text_input("Long Term Objective", value="ML Engineering Manager within 2 years")
+        salary_expectation = st.text_input("Target Compensation", value="$180,000 - $230,000 base + equity")
+        career_goal = st.text_input("Long Term Objective", value="ML Engineering Manager or Staff ML Engineer within 2 years")
 
     col3, col4 = st.columns(2)
     with col3:
         tech_skills_raw = st.text_area("Technical Stack (Comma Separated)", 
-            value="Python, PyTorch, TensorFlow, Scikit-learn, HuggingFace Transformers, LLM fine-tuning, RAG systems, MLOps, AWS SageMaker, Docker, Kubernetes")
+            value="Python, PyTorch, TensorFlow, Scikit-learn, HuggingFace Transformers, LLM fine-tuning, RAG systems, MLflow, Kubeflow, Apache Spark, SQL, NoSQL, AWS SageMaker, GCP Vertex AI, Docker, Kubernetes, FastAPI, Apache Airflow, Pandas, NumPy")
         projects_raw = st.text_area("Key Project Highlights (One per line)", 
-            value="Real-time fraud detection model - reduced false positives by 34%, saving $2.1M annually\nRAG-based customer support chatbot using LangChain + GPT-4\nMLOps pipeline migration to Kubeflow")
+            value="Real-time fraud detection model (XGBoost + LSTM) - reduced false positives by 34%, saving $2.1M annually\nRAG-based customer support chatbot using LangChain + GPT-4 - handled 60% of tier-1 tickets\nMLOps pipeline migration to Kubeflow - cut deployment time from 2 weeks to 4 hours\nPublished paper on contrastive learning for low-resource NLP at EMNLP 2022")
     with col4:
         soft_skills_raw = st.text_area("Core Soft Competencies (Comma Separated)", 
-            value="Technical leadership, Cross-functional collaboration, Mentoring junior engineers")
+            value="Technical leadership, Cross-functional collaboration, Mentoring junior engineers, Stakeholder communication, Agile/Scrum, Data storytelling")
         certs_raw = st.text_area("Credentials & Certifications (Comma Separated)", 
-            value="AWS Certified Machine Learning - Specialty, Google Professional ML Engineer")
+            value="AWS Certified Machine Learning - Specialty, Google Professional ML Engineer, Deep Learning Specialization (deeplearning.ai)")
 
 # Re-assemble data object from input parameters dynamically
 CANDIDATE_PROFILE = {
@@ -175,58 +193,58 @@ if st.button("🚀 Execute Strategic Multi-Agent Pipeline Assembly", type="prima
     # Define Agents
     profile_analyst = Agent(
         role='Senior Career Profile Analyst',
-        goal='Analyze the candidate background, extract key strengths, and define a precise career positioning strategy.',
-        backstory='Veteran career strategist mapping candidate profiles.',
-        tools=[skill_gap_tool], llm=llm, verbose=True, allow_delegation=False
+        goal='Deeply analyze the candidate background, extract key strengths, and define a precise career positioning strategy.',
+        backstory='Veteran career strategist mapping candidate profiles with 15 years experience at executive search firms.',
+        tools=[skill_gap_tool], llm=llm, verbose=True, allow_delegation=False, max_iter=5
     )
 
     job_researcher = Agent(
         role='Elite Job Market Intelligence Researcher',
-        goal='Find top target open roles, map descriptions, and analyze compensation benchmarks.',
-        backstory='Data-driven web intelligence engine running precise live searches.',
-        tools=[job_search_tool, salary_tool, company_tool], llm=llm, verbose=True, allow_delegation=False
+        goal='Find the top 5 best-fit target open roles, map descriptions, and analyze compensation benchmarks.',
+        backstory='Data-driven web intelligence engine running precise live searches and evaluating culture signals.',
+        tools=[job_search_tool, salary_tool, company_tool], llm=llm, verbose=True, allow_delegation=False, max_iter=8
     )
 
     resume_specialist = Agent(
         role='ATS-Optimized Resume Tailoring Expert',
         goal='Craft optimized resume block matrices targeted to bypass automated filtration systems.',
-        backstory='Enterprise technical recruiter modeling text structures.',
-        tools=[skill_gap_tool], llm=llm, verbose=True, allow_delegation=False
+        backstory='Certified professional resume writer who has reverse-engineered 200+ ATS layouts.',
+        tools=[skill_gap_tool], llm=llm, verbose=True, allow_delegation=False, max_iter=5
     )
 
     cover_letter_writer = Agent(
         role='Persuasive Cover Letter Storytelling Expert',
         goal='Produce compelling cover letters linking candidate histories to targeted missions.',
-        backstory='Master copywriter skilled at drafting highly converting application materials.',
-        tools=[company_tool], llm=creative_llm, verbose=True, allow_delegation=False
+        backstory='Master copywriter and former journalist skilled at drafting high-conversion application materials.',
+        tools=[company_tool], llm=creative_llm, verbose=True, allow_delegation=False, max_iter=4
     )
 
     interview_coach = Agent(
         role='Executive Interview Preparation Coach',
-        goal='Formulate targeted technical/behavioral preparation frameworks and negotiation scripts.',
-        backstory='Elite hiring director leading candidate preparation execution loops.',
-        tools=[interview_tool, company_tool], llm=llm, verbose=True, allow_delegation=False
+        goal='Formulate targeted technical/behavioral preparation frameworks, STAR matrices, and negotiation scripts.',
+        backstory='Elite hiring director and former FAANG engineering manager leading preparation loops.',
+        tools=[interview_tool, company_tool], llm=llm, verbose=True, allow_delegation=False, max_iter=5
     )
 
     report_compiler = Agent(
         role='Strategic Career Action Plan Compiler',
         goal='Consolidate prior multi-agent analytics outputs into a clear actionable blueprint markdown layout.',
-        backstory='Operations officer tracking structural insights datasets.',
-        tools=[], llm=llm, verbose=True, allow_delegation=True
+        backstory='Operations officer tracking structural insights datasets and milestones.',
+        tools=[], llm=llm, verbose=True, allow_delegation=True, max_iter=4
     )
 
     # Define Tasks
     profile_str = json.dumps(CANDIDATE_PROFILE, indent=2)
 
-    t1 = Task(description=f'Analyze data portfolio metrics:\n{profile_str}\nProvide strengths, UVPs, and placement strategy.', agent=profile_analyst, expected_output='Profile positioning analysis.')
-    t2 = Task(description=f'Scan open listings for: {CANDIDATE_PROFILE["target_role"]}.\nProvide top options, matching scores, and pay scales.', agent=job_researcher, expected_output='Market research documentation data.')
-    t3 = Task(description=f'Design an absolute elite ATS compliant parsing matrix block draft containing data highlights tailored to target parameters.', agent=resume_specialist, expected_output='ATS resume draft structural copy.')
-    t4 = Task(description=f'Draft custom narrative cover letters connecting candidate strengths to targeted opportunities.', agent=cover_letter_writer, expected_output='Two clear cover letter document structures.')
-    t5 = Task(description=f'Establish structured study guide containing sample custom technical questions, answer parameters, and strategic structural negotiation layouts.', agent=interview_coach, expected_output='Full behavioral interview prep playbook.')
+    t1 = Task(description=f'Analyze data portfolio metrics:\n{profile_str}\nProvide strengths, UVPs, weaknesses, and placement strategy.', agent=profile_analyst, expected_output='Profile positioning analysis with 8 distinct parts.')
+    t2 = Task(description=f'Scan open listings for: {CANDIDATE_PROFILE["target_role"]}.\nProvide top options, matching scores, and pay scales.', agent=job_researcher, expected_output='Market research documentation data with 5 ranked opportunities.')
+    t3 = Task(description=f'Design an absolute elite ATS compliant parsing matrix block draft containing data highlights tailored to target parameters.', agent=resume_specialist, expected_output='ATS resume draft structural copy with tailoring notes.')
+    t4 = Task(description=f'Draft custom narrative cover letters connecting candidate strengths to targeted opportunities using hooks.', agent=cover_letter_writer, expected_output='Two clear, highly personalized cover letter document structures.')
+    t5 = Task(description=f'Establish structured study guide containing sample custom technical questions, answer parameters, and strategic structural negotiation layouts.', agent=interview_coach, expected_output='Full behavioral interview prep playbook with questions and negotiation script.')
     t6 = Task(description=f'Synthesize all prior outputs into a cohesive master markdown layout titled: `# Career Action Plan`. Make it actionable.', agent=report_compiler, expected_output='Master executive career roadmap dashboard dataset.')
 
     # Execution Loop
-    with st.spinner("🧠 Orchestrating Agents... Running pipeline execution loops (Steps 1-6). Est time: 3 mins..."):
+    with st.spinner("🧠 Orchestrating Semantic-Aware Agents... Running pipeline execution loops. Est time: 3-5 mins..."):
         crew = Crew(
             agents=[profile_analyst, job_researcher, resume_specialist, cover_letter_writer, interview_coach, report_compiler],
             tasks=[t1, t2, t3, t4, t5, t6],
