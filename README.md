@@ -1,40 +1,262 @@
-◽ Multi-Agent Job Search System
+# ⚡ NEXUS JOB AI
+### Multi-Agent AI-Powered Job Search & Career Optimization Platform
 
-Automated job search pipeline using 6 AI agents built with CrewAI and LangChain.
+A futuristic multi-agent system built using **CrewAI**, **LangChain**, **Groq LLM**, and **FAISS** that automates the entire job application workflow—from job discovery to resume optimization, cover letter generation, interview preparation, and skill-gap analysis.
 
+---
 
+## 🚀 Features
 
-🔹 Architecture
-6 Specialized Agents: Profile Analyst, Job Researcher, Resume Specialist, Cover Letter Writer, Interview Coach, Report Compiler
+### 🤖 6 Specialized AI Agents
 
-Real-time Search: Live job search integration via Serper API
+| Agent | Responsibility |
+|---------|---------------|
+| Profile Analyst | Analyzes candidate profile, strengths, and career positioning |
+| Job Researcher | Searches relevant jobs and market opportunities |
+| Resume Specialist | Creates ATS-optimized resumes tailored to jobs |
+| Cover Letter Writer | Generates personalized cover letters |
+| Interview Coach | Produces interview questions, STAR answers, and preparation guides |
+| Report Compiler | Creates a complete career action plan |
 
-Skill-Gap Analysis: Semantic skill-gap analysis using FAISS + SentenceTransformers
+---
 
-Core LLM: llama-3.3-70b-versatile via Groq
+## 🏗 System Architecture
 
-🔹 Tech Stack
+```text
+Candidate Profile
+        │
+        ▼
+Profile Analyst
+        │
+        ▼
+Job Researcher
+        │
+        ▼
+Resume Specialist
+        │
+        ▼
+Cover Letter Writer
+        │
+        ▼
+Interview Coach
+        │
+        ▼
+Report Compiler
+        │
+        ▼
+Career Optimization Report
+```
 
-CrewAI · LangChain · Groq · FAISS · SentenceTransformers · Matplotlib
+---
 
+## 🛠 Tech Stack
 
+### AI & Machine Learning
+- CrewAI
+- LangChain
+- Groq (Llama 3.3 70B)
+- Sentence Transformers
+- FAISS
 
-🔹 Quick Start
+### Search & Data
+- Serper API
+- Real-time Web Search
 
-Open in Google Colab (badge below)
-Add Groq + Serper API keys
+### Frontend
+- Streamlit
+- Cyberpunk / Sci-Fi UI
+- Custom CSS
 
-Edit CANDIDATE_PROFILE with your info
-Run all cells
+### Visualization
+- Matplotlib
+- Skill Gap Analysis Charts
 
+---
 
+## 📊 Key Capabilities
 
-🔹 Results
+✅ Automated Job Search
 
-Finds top 5 matching jobs with fit scores
+✅ ATS Resume Optimization
 
-Generates ATS-optimized resume
+✅ Personalized Cover Letter Generation
 
-Writes personalized cover letters
+✅ Interview Preparation
 
-Full interview prep guide + salary negotiation script
+✅ Salary Negotiation Guidance
+
+✅ Skill Gap Analysis
+
+✅ Career Roadmap Generation
+
+✅ Real-Time Job Market Research
+
+---
+
+## 🎨 Cyberpunk User Interface
+
+The application features a futuristic design inspired by:
+
+- Cyberpunk 2077
+- Terminal Interfaces
+- Retro Futurism
+- Neon UI Systems
+
+### UI Highlights
+
+- Neon Cyan & Purple Theme
+- Sci-Fi Dashboard
+- Custom Agent Status Panels
+- Animated Progress Tracking
+- Terminal-Style Components
+- Futuristic Typography
+
+---
+
+## 📁 Project Structure
+
+```text
+multiagent-job-search/
+│
+├── app.py
+├── requirements.txt
+├── runtime.txt
+├── README.md
+│
+├── outputs/
+│   ├── resume.md
+│   ├── cover_letter.md
+│   ├── interview_prep.md
+│   └── career_report.md
+│
+└── assets/
+```
+
+---
+
+## ⚙ Installation
+
+### Clone Repository
+
+```bash
+git clone https://github.com/DeepakSinghhh/multiagent-job-search-crewai.git
+
+cd multiagent-job-search-crewai
+```
+
+### Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## 🔑 Environment Variables
+
+Create a `.env` file:
+
+```env
+GROQ_API_KEY=your_groq_api_key
+SERPER_API_KEY=your_serper_api_key
+```
+
+---
+
+## ▶ Run Locally
+
+```bash
+streamlit run app.py
+```
+
+---
+
+## ☁ Deploy on Streamlit Cloud
+
+### 1. Push to GitHub
+
+```bash
+git add .
+git commit -m "Initial Commit"
+git push
+```
+
+### 2. Deploy
+
+- Open Streamlit Cloud
+- Connect GitHub Repository
+- Select `app.py`
+- Deploy
+
+### 3. Add Secrets
+
+```toml
+GROQ_API_KEY = "your_key"
+SERPER_API_KEY = "your_key"
+```
+
+---
+
+## 📈 Skill Gap Analysis
+
+The platform performs semantic comparison between:
+
+- Candidate Skills
+- Job Requirements
+
+Using:
+
+- Sentence Transformers
+- Vector Embeddings
+- FAISS Similarity Search
+
+This helps identify:
+
+- Missing Skills
+- Learning Priorities
+- Career Growth Opportunities
+
+---
+
+## 🎯 Example Output
+
+The system generates:
+
+### Resume
+- ATS Optimized
+- Job Specific
+- Keyword Enhanced
+
+### Cover Letter
+- Personalized
+- Recruiter Focused
+
+### Interview Guide
+- Technical Questions
+- Behavioral Questions
+- STAR Responses
+
+### Career Report
+- Skill Gaps
+- Salary Insights
+- Recommended Opportunities
+
+---
+
+## 💡 Future Improvements
+
+- LinkedIn Integration
+- Resume PDF Export
+- Multi-LLM Support
+- Job Recommendation Scoring
+- Agent Memory
+- RAG-Based Career Knowledge Base
+- Dashboard Analytics
+
+---
+
+## 👨‍💻 Author
+
+Deepak Kumar Singh
+
+LinkedIn: https://www.linkedin.com/in/deepak-kumar-singh-698b02350/
